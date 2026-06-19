@@ -21,12 +21,12 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install slate-ai (Core dependency)
-        # slate-pro depends on the open-source slate-ai package. Once slate-ai
-        # is published to PyPI this resolves automatically via pyproject. Until
-        # then, install it from the Core repo (set SLATE_AI_REF if needed).
+        # slate-pro is only a compatibility wrapper. Until the current public
+        # slate-ai package is published to PyPI, install the matching public
+        # source branch directly so typing markers and APIs match this release.
         run: |
           python -m pip install --upgrade pip
-          pip install slate-ai || pip install "git+https://github.com/tygartnexus/slate.git@${SLATE_AI_REF:-master}"
+          pip install "git+https://github.com/tygartnexus/slate.git@${SLATE_AI_REF:-main}"
         env:
           SLATE_AI_REF: ${{ vars.SLATE_AI_REF }}
 
