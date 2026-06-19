@@ -1,0 +1,43 @@
+name: ci
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install slate-ai (Core dependency)
+        # slate-pro depends on the open-source slate-ai package. Once slate-ai
+        # is published to PyPI this resolves automatically via pyproject. Until
+        # then, install it from the Core repo (set SLATE_AI_REF if needed).
+        run: |
+          python -m pip install --upgrade pip
+          pip install slate-ai || pip install "git+https://github.com/tygartnexus/slate.git@${SLATE_AI_REF:-master}"
+        env:
+          SLATE_AI_REF: ${{ vars.SLATE_AI_REF }}
+
+      - name: Install slate-pro
+        run: pip install -e ".[dev]"
+
+      - name: Lint
+        run: ruff check src tests
+
+      - name: Type check
+        run: mypy src
+
+      - name: Test
+        run: pytest -v --cov=slate_pro --cov-report=term-missing
